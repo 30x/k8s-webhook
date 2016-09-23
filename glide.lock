@@ -1,0 +1,10 @@
+hash: 56f5aecf3b1590d18fa9aa4fc91da5fe7b57e9efcb62832f2409e3d5c2888f2e
+updated: 2016-09-23T15:12:45.713919959-06:00
+imports:
+- name: github.com/pressly/chi
+  version: 7488f685eeba499189011a14ffed7c57dfc8b26b
+  subpackages:
+  - docgen
+  - middleware
+  - render
+testImports: []

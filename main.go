@@ -32,7 +32,7 @@ func main() {
 
 	r.Post("/authz", parseAuthzRequest)
 
-	err := http.ListenAndServe(":8081", r)
+	err := http.ListenAndServeTLS(":8081", "cert.pem", "key.pem", r)
 	if err != nil {
 		log.Fatal("ListenAndServe Error: ", err)
 	}

@@ -30,18 +30,7 @@ func main() {
 		w.Write([]byte("pong"))
 	})
 
-	r.Post("/authz", func(w http.ResponseWriter, r *http.Request) {
-		//Do the authz checking here
-		allowed, err := parseAuthzRequest(w, r)
-		if err != nil {
-			w.Write([]byte("Error!"))
-		}
-		if allowed {
-			w.Write([]byte("Allowed"))
-		} else {
-			w.Write([]byte("Denied"))
-		}
-	})
+	r.Post("/authz", parseAuthzRequest)
 
 	err := http.ListenAndServe(":8081", r)
 	if err != nil {
@@ -49,14 +38,13 @@ func main() {
 	}
 }
 
-func parseAuthzRequest(w http.ResponseWriter, request *http.Request) (bool, error) {
+func parseAuthzRequest(w http.ResponseWriter, request *http.Request) {
 	//Parse the json
 	//Decode passed JSON body
 	var requestJSON helper.AuthzRequestBody
 	err := json.NewDecoder(request.Body).Decode(&requestJSON)
 	if err != nil {
 		fmt.Printf("Error decoding JSON Body: %s\n", err)
-		return false, err
 	}
 
 	//Print out the user
@@ -80,7 +68,4 @@ func parseAuthzRequest(w http.ResponseWriter, request *http.Request) (bool, erro
 	}
 	w.Header().Add("Content-Type", "application/json")
 	w.Write(js)
-
-	//Say whether or not the request is authorized
-	return true, nil
 }

@@ -1,12 +1,16 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/pressly/chi"
 	"github.com/pressly/chi/middleware"
+
+	"github.com/30x/k8s-webhook/pkg/helper"
 )
 
 func main() {
@@ -26,8 +30,57 @@ func main() {
 		w.Write([]byte("pong"))
 	})
 
+	r.Post("/authz", func(w http.ResponseWriter, r *http.Request) {
+		//Do the authz checking here
+		allowed, err := parseAuthzRequest(w, r)
+		if err != nil {
+			w.Write([]byte("Error!"))
+		}
+		if allowed {
+			w.Write([]byte("Allowed"))
+		} else {
+			w.Write([]byte("Denied"))
+		}
+	})
+
 	err := http.ListenAndServe(":8081", r)
 	if err != nil {
 		log.Fatal("ListenAndServe Error: ", err)
 	}
+}
+
+func parseAuthzRequest(w http.ResponseWriter, request *http.Request) (bool, error) {
+	//Parse the json
+	//Decode passed JSON body
+	var requestJSON helper.AuthzRequestBody
+	err := json.NewDecoder(request.Body).Decode(&requestJSON)
+	if err != nil {
+		fmt.Printf("Error decoding JSON Body: %s\n", err)
+		return false, err
+	}
+
+	//Print out the user
+	fmt.Printf("User: %v\n", requestJSON.Spec.User)
+
+	//Do a check against permissions
+
+	//Send the relevant response
+	responseJSON := &helper.AuthzResponseBody{
+		APIVersion: "authorization.k8s.io/v1beta1",
+		Kind:       "SubjectAccessReview",
+		Status: helper.Status{
+			Allowed: true,
+			Reason:  "testing",
+		},
+	}
+
+	js, err := json.Marshal(responseJSON)
+	if err != nil {
+		fmt.Printf("Error Marshalling JSON response\n")
+	}
+	w.Header().Add("Content-Type", "application/json")
+	w.Write(js)
+
+	//Say whether or not the request is authorized
+	return true, nil
 }
